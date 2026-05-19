@@ -45,8 +45,8 @@
                 <div class="p-6 text-center">
                     <h3 class="text-2xl font-bold mb-2">{{ $model->name }}</h3>
                     <p class="text-gray-500 mb-6">Giá từ: <span class="text-red-600 font-bold">{{ number_format($model->cars->min('price'), 0, ',', '.') }} VNĐ</span></p>
-                    <a href="#contact-section" class="inline-block bg-white text-red-600 font-semibold border-2 border-red-600 px-6 py-2 rounded hover:bg-red-600 hover:text-white transition-colors duration-300">
-                        Nhận báo giá
+                    <a href="{{ route('car.detail', $model->slug) }}" class="inline-block bg-white text-red-600 font-semibold border-2 border-red-600 px-6 py-2 rounded hover:bg-red-600 hover:text-white transition-colors duration-300">
+                        Xem chi tiết & Báo giá
                     </a>
                 </div>
             </div>

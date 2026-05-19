@@ -19,6 +19,10 @@
                     <x-nav-link :href="route('admin.car_models.index')" :active="request()->routeIs('admin.car_models.*')">
                         Quản lý Dòng xe
                     </x-nav-link>
+                    
+                    <x-nav-link :href="route('admin.cars.index')" :active="request()->routeIs('admin.cars.*')">
+                        Quản lý Phiên bản
+                    </x-nav-link>
                 </div>
             </div>
 
