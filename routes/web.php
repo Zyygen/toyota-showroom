@@ -6,6 +6,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CarModelController;
 use App\Http\Controllers\Admin\CarController;
+use App\Http\Controllers\Admin\ContactManageController;
 
 // 1. Route Front-end (Khách hàng)
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -43,6 +44,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/cars/{id}/edit', [CarController::class, 'edit'])->name('cars.edit');
     Route::put('/cars/{id}', [CarController::class, 'update'])->name('cars.update');
     Route::delete('/cars/{id}', [CarController::class, 'destroy'])->name('cars.destroy');
+
+    // Quản lý Khách hàng liên hệ
+    Route::get('/contacts', [ContactManageController::class, 'index'])->name('contacts.index');
+    Route::post('/contacts/{id}/status', [ContactManageController::class, 'updateStatus'])->name('contacts.status');
+    Route::delete('/contacts/{id}', [ContactManageController::class, 'destroy'])->name('contacts.destroy');
 });
 
 // Bắt buộc giữ lại file auth.php của hệ thống đăng nhập

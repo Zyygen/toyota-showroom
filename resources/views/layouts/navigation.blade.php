@@ -23,6 +23,10 @@
                     <x-nav-link :href="route('admin.cars.index')" :active="request()->routeIs('admin.cars.*')">
                         Quản lý Phiên bản
                     </x-nav-link>
+                    
+                    <x-nav-link :href="route('admin.contacts.index')" :active="request()->routeIs('admin.contacts.*')">
+                        Khách hàng liên hệ
+                    </x-nav-link>
                 </div>
             </div>
 
