@@ -36,7 +36,7 @@
                                         <td class="px-6 py-4 font-bold">{{ $model->id }}</td>
                                         <td class="px-6 py-4">
                                             @if($model->image)
-                                                <img src="{{ $model->image }}" alt="{{ $model->name }}" class="w-20 h-12 object-cover rounded border">
+                                                <img src="{{ $model->image }}" alt="{{ $model->name }}" class="w-24 h-16 object-contain bg-white rounded border p-1">
                                             @else
                                                 <span class="text-gray-400 italic">Chưa có ảnh</span>
                                             @endif

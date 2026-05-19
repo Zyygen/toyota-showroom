@@ -18,7 +18,13 @@ Route::middleware('auth')->group(function () {
     
     // Trang Dashboard (Tên route bắt buộc phải là 'dashboard')
     Route::get('/dashboard', function () {
-        return view('dashboard');
+
+        // Đếm số liệu từ Database
+        $totalModels = \App\Models\CarModel::query()->count();
+        $totalCars = \App\Models\Car::query()->count();
+        $pendingContacts = \App\Models\Contact::query()->where('status', 'pending')->count();
+
+        return view('dashboard', compact('totalModels', 'totalCars', 'pendingContacts'));
     })->name('dashboard');
 
     // Quản lý Profile
@@ -36,6 +42,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/car-models/{id}/edit', [CarModelController::class, 'edit'])->name('car_models.edit');
     Route::put('/car-models/{id}', [CarModelController::class, 'update'])->name('car_models.update');
     Route::delete('/car-models/{id}', [CarModelController::class, 'destroy'])->name('car_models.destroy');
+    // Thêm hình ảnh mô tả tính năng
+    Route::post('/car-models/{id}/features', [CarModelController::class, 'storeFeature'])->name('car_models.features.store');
+    Route::delete('/car-features/{id}', [CarModelController::class, 'destroyFeature'])->name('car_models.features.destroy');
 
     // Quản lý Phiên bản xe
     Route::get('/cars', [CarController::class, 'index'])->name('cars.index');
