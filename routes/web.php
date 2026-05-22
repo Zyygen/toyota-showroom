@@ -7,10 +7,13 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CarModelController;
 use App\Http\Controllers\Admin\CarController;
 use App\Http\Controllers\Admin\ContactManageController;
+use Carbon\Carbon;
 
 // 1. Route Front-end (Khách hàng)
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/contact-submit', [ContactController::class, 'submitForm'])->name('contact.submit');
+Route::get('/deposit/secure/{token}', [ContactController::class, 'showDepositForm'])->name('deposit.form');
+Route::post('/deposit/secure/{token}', [ContactController::class, 'submitDeposit'])->name('deposit.submit');
 Route::get('/xe/{slug}', [HomeController::class, 'show'])->name('car.detail');
 
 // 2. Nhóm Route của hệ thống (Breeze) - Bắt buộc giữ tên mặc định
@@ -18,13 +21,29 @@ Route::middleware('auth')->group(function () {
     
     // Trang Dashboard (Tên route bắt buộc phải là 'dashboard')
     Route::get('/dashboard', function () {
+        $today = Carbon::today();
+        $startOfWeek = Carbon::now()->startOfWeek();
+        $startOfMonth = Carbon::now()->startOfMonth();
 
-        // Đếm số liệu từ Database
+        // 1. Thống kê Lượt Yêu cầu tư vấn (Dựa vào ngày tạo - created_at)
+        $reqToday = \App\Models\Contact::whereDate('created_at', $today)->count();
+        $reqWeek = \App\Models\Contact::whereBetween('created_at', [$startOfWeek, Carbon::now()])->count();
+        $reqMonth = \App\Models\Contact::whereBetween('created_at', [$startOfMonth, Carbon::now()])->count();
+
+        // 2. Thống kê Lượt Khách chốt cọc (Dựa vào ngày cập nhật - updated_at và trạng thái paid)
+        $paidToday = \App\Models\Contact::where('payment_status', 'paid')->whereDate('updated_at', $today)->count();
+        $paidWeek = \App\Models\Contact::where('payment_status', 'paid')->whereBetween('updated_at', [$startOfWeek, Carbon::now()])->count();
+        $paidMonth = \App\Models\Contact::where('payment_status', 'paid')->whereBetween('updated_at', [$startOfMonth, Carbon::now()])->count();
+
+        // Số liệu tồn kho xe
         $totalModels = \App\Models\CarModel::query()->count();
         $totalCars = \App\Models\Car::query()->count();
-        $pendingContacts = \App\Models\Contact::query()->where('status', 'pending')->count();
 
-        return view('dashboard', compact('totalModels', 'totalCars', 'pendingContacts'));
+        return view('dashboard', compact(
+            'reqToday', 'reqWeek', 'reqMonth', 
+            'paidToday', 'paidWeek', 'paidMonth',
+            'totalModels', 'totalCars'
+        ));
     })->name('dashboard');
 
     // Quản lý Profile
@@ -58,6 +77,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/contacts', [ContactManageController::class, 'index'])->name('contacts.index');
     Route::post('/contacts/{id}/status', [ContactManageController::class, 'updateStatus'])->name('contacts.status');
     Route::delete('/contacts/{id}', [ContactManageController::class, 'destroy'])->name('contacts.destroy');
+    Route::post('/contacts/{id}/confirm', [ContactController::class, 'confirmConsultation'])->name('contacts.confirm');
+    Route::post('/contacts/{id}/confirm-deposit', [ContactManageController::class, 'confirmDeposit'])->name('contacts.confirm_deposit');
 });
 
 // Bắt buộc giữ lại file auth.php của hệ thống đăng nhập

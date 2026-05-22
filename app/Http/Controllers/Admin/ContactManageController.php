@@ -35,4 +35,14 @@ class ContactManageController extends Controller
         Contact::findOrFail($id)->delete();
         return back()->with('success', 'Đã xóa thông tin liên hệ!');
     }
+
+    // Xác nhận Kế toán đã nhận được tiền chuyển khoản
+    public function confirmDeposit($id)
+    {
+        $contact = \App\Models\Contact::findOrFail($id);
+        $contact->payment_status = 'paid'; // Chuyển trạng thái sang Đã thanh toán
+        $contact->save();
+
+        return back()->with('success', 'Đã xác nhận nhận tiền cọc thành công! Khách hàng '.$contact->fullname.' đã chính thức chốt xe.');
+    }
 }

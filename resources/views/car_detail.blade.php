@@ -262,6 +262,10 @@
                             <label class="block text-xs font-bold uppercase text-neutral-500 tracking-wider mb-2">Họ và tên quý khách *</label>
                             <input type="text" name="fullname" required class="w-full border-neutral-200 rounded px-4 py-3 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all outline-none">
                         </div>
+                        <div class="col-span-1 sm:col-span-2">
+                            <label class="block text-xs font-bold uppercase text-neutral-500 tracking-wider mb-2">Email nhận thông báo *</label>
+                            <input type="email" name="email" required class="w-full border-neutral-200 rounded px-4 py-3 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500">
+                        </div>
                         <div>
                             <label class="block text-xs font-bold uppercase text-neutral-500 tracking-wider mb-2">Số điện thoại *</label>
                             <input type="text" name="phone" required class="w-full border-neutral-200 rounded px-4 py-3 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all outline-none">

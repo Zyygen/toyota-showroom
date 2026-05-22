@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Danh sách Khách hàng Liên hệ</h2>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Danh sách Khách hàng Liên hệ & Đặt cọc</h2>
     </x-slot>
 
     <div class="py-12">
@@ -19,9 +19,8 @@
                             <tr>
                                 <th class="px-6 py-3">Ngày gửi</th>
                                 <th class="px-6 py-3">Khách hàng</th>
-                                <th class="px-6 py-3">Số điện thoại</th>
-                                <th class="px-6 py-3">Xe quan tâm</th>
-                                <th class="px-6 py-3">Ghi chú</th>
+                                <th class="px-6 py-3">Thông tin liên hệ</th>
+                                <th class="px-6 py-3">Xe quan tâm / Chốt cọc</th>
                                 <th class="px-6 py-3 text-center">Trạng thái</th>
                                 <th class="px-6 py-3 text-right">Thao tác</th>
                             </tr>
@@ -30,24 +29,50 @@
                             @forelse ($contacts as $contact)
                                 <tr class="border-b hover:bg-gray-50">
                                     <td class="px-6 py-4">{{ $contact->created_at->format('d/m/Y H:i') }}</td>
+                                    
                                     <td class="px-6 py-4 font-bold text-gray-900">{{ $contact->fullname }}</td>
-                                    <td class="px-6 py-4 font-bold text-red-600">{{ $contact->phone }}</td>
-                                    <td class="px-6 py-4">{{ $contact->car_model }}</td>
-                                    <td class="px-6 py-4">{{ $contact->message }}</td>
-                                    <td class="px-6 py-4 text-center">
-                                        @if($contact->status == 'pending')
-                                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-bold">Chờ gọi điện</span>
-                                        @else
-                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">Đã tư vấn</span>
+                                    
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold text-red-600">{{ $contact->phone }}</div>
+                                        <div class="text-xs text-gray-500">{{ $contact->email ?? 'Chưa cập nhật' }}</div>
+                                    </td>
+                                    
+                                    <td class="px-6 py-4">
+                                        <div class="font-semibold text-gray-800">{{ $contact->car_model }}</div>
+                                        @if($contact->final_car_model && $contact->final_car_model != $contact->car_model)
+                                            <div class="text-xs text-blue-600 mt-1">↳ Đổi sang: {{ $contact->final_car_model }}</div>
                                         @endif
                                     </td>
+                                    
+                                    <td class="px-6 py-4 text-center">
+                                        @if($contact->consultation_status == 'pending')
+                                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-bold">Chờ gọi điện</span>
+                                        @elseif($contact->consultation_status == 'completed' && $contact->payment_status == 'unpaid')
+                                            <span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">Đang chờ khách cọc</span>
+                                        @elseif($contact->payment_status == 'pending_verification')
+                                            <span class="bg-blue-100 text-blue-800 border border-blue-200 px-2 py-1 rounded text-xs font-bold animate-pulse">Đã CK (Chờ Check Bank)</span>
+                                        @elseif($contact->payment_status == 'paid')
+                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">Đã xác nhận cọc</span>
+                                        @endif
+                                    </td>
+                                    
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex justify-end items-center gap-2">
-                                            @if($contact->status == 'pending')
-                                                <form action="{{ route('admin.contacts.status', $contact->id) }}" method="POST">
+                                            
+                                            @if($contact->consultation_status == 'pending')
+                                                <form action="{{ route('admin.contacts.confirm', $contact->id) }}" method="POST">
                                                     @csrf
-                                                    <button type="submit" class="bg-blue-100 text-blue-800 hover:bg-blue-200 px-3 py-1.5 rounded-lg text-xs font-bold transition">
-                                                        ✓ Xong
+                                                    <button type="submit" class="bg-blue-100 text-blue-800 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm" onclick="return confirm('Bạn đã tư vấn xong và muốn hệ thống gửi Email lấy cọc cho khách hàng này?');">
+                                                        ✓ Đã tư vấn
+                                                    </button>
+                                                </form>
+                                            @endif
+                                            
+                                            @if($contact->payment_status == 'pending_verification')
+                                                <form action="{{ route('admin.contacts.confirm_deposit', $contact->id) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="bg-emerald-100 text-emerald-800 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm border border-emerald-200" onclick="return confirm('Kế toán xác nhận ĐÃ NHẬN ĐƯỢC TIỀN cọc từ khách hàng này?');">
+                                                        ✓ Xác nhận Đã Cọc
                                                     </button>
                                                 </form>
                                             @endif
@@ -64,7 +89,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">Chưa có khách hàng nào liên hệ.</td>
+                                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">Chưa có khách hàng nào liên hệ.</td>
                                 </tr>
                             @endforelse
                         </tbody>

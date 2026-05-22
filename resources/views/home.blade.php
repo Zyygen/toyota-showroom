@@ -96,24 +96,21 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="car-grid">
             @foreach($carModels as $model)
                 @php
-                    // Logic nhận diện phân khúc nâng cấp
                     $nameLower = strtolower($model->name);
-                    $cat = 'suv'; // Mặc định là SUV/MPV (Yaris, Corolla Cross, Fortuner, Innova...)
+                    $cat = 'suv';
                     
                     if(str_contains($nameLower, 'vios') || str_contains($nameLower, 'camry') || str_contains($nameLower, 'altis')) {
                         $cat = 'sedan';
                     } elseif (str_contains($nameLower, 'wigo')) {
-                        // Chỉ giữ lại Wigo ở nhóm Hatchback
                         $cat = 'hatchback';
                     } elseif (str_contains($nameLower, 'hilux')) {
                         $cat = 'pickup';
                     }
 
-                    // Kiểm tra xem dòng xe có phiên bản hybrid không
                     $isHybrid = $model->cars->contains('fuel_type', 'hybrid');
                 @endphp
 
-                <div class="car-card bg-white rounded-xl border border-neutral-200/80 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group" 
+                <div class="car-card bg-white rounded-xl border border-neutral-200/80 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group" style="display: none;"
                      data-segment="{{ $cat }}" 
                      data-hybrid="{{ $isHybrid ? 'true' : 'false' }}">
                     
@@ -160,6 +157,10 @@
                 </div>
             @endforeach
         </div>
+
+        <div id="pagination-wrapper" class="flex justify-center items-center gap-2 mt-12">
+            </div>
+
     </section>
 
     <section id="contact-section" class="bg-neutral-50 border-t border-neutral-100 py-20">
@@ -188,6 +189,11 @@
                             <label class="block text-xs font-bold uppercase text-neutral-500 tracking-wider mb-2">Số điện thoại *</label>
                             <input type="text" name="phone" required class="w-full border-neutral-200 rounded px-4 py-3 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all outline-none">
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-neutral-500 tracking-wider mb-2">Email nhận thông báo *</label>
+                        <input type="email" name="email" required placeholder="Nhập email" class="w-full border-neutral-200 rounded px-4 py-3 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all outline-none">
                     </div>
 
                     <div>
@@ -229,41 +235,97 @@
     </footer>
 
     <script>
+        // CẤU HÌNH PHÂN TRANG
+        let currentPage = 1;
+        const itemsPerPage = 6; // Số xe tối đa trên 1 trang
+        let currentCategory = 'all';
+
         function filterCategory(category) {
-            // Lấy tất cả các thẻ xe
-            const cards = document.querySelectorAll('.car-card');
-            
-            // Xử lý ẩn hiện xe dựa theo data-attribute
-            cards.forEach(card => {
-                const segment = card.getAttribute('data-segment');
-                const isHybrid = card.getAttribute('data-hybrid') === 'true';
+            currentCategory = category;
+            currentPage = 1; // Reset về trang 1 mỗi khi đổi bộ lọc
 
-                if (category === 'all') {
-                    card.style.display = 'block';
-                } else if (category === 'hybrid') {
-                    card.style.display = isHybrid ? 'block' : 'none';
-                } else {
-                    card.style.display = (segment === category) ? 'block' : 'none';
-                }
-            });
-
-            // Cập nhật class CSS hoạt động cho các nút bấm bộ lọc
+            // Cập nhật giao diện nút bấm bộ lọc
             const buttons = document.querySelectorAll('.filter-btn');
             buttons.forEach(btn => {
-                btn.className = "filter-btn inactive-btn font-semibold text-sm px-6 py-2.5 rounded transition-all duration-200";
+                btn.className = "filter-btn inactive-btn font-semibold text-sm px-6 py-2.5 rounded transition-all duration-200 text-neutral-600";
             });
             
-            // Ép style chủ động cho nút được chọn
             const activeBtn = document.getElementById('btn-' + category);
             if(category === 'hybrid') {
                 activeBtn.className = "filter-btn font-semibold text-sm px-6 py-2.5 rounded transition-all duration-200 text-white bg-emerald-600 shadow-sm";
             } else {
                 activeBtn.className = "filter-btn font-semibold text-sm px-6 py-2.5 rounded transition-all duration-200 text-white bg-red-600 shadow-sm";
             }
+
+            // Gọi hàm render xe
+            renderCars();
         }
 
-        // Định dạng mặc định ban đầu là nút "Tất cả" sáng màu đỏ
-        document.getElementById('btn-all').className = "filter-btn font-semibold text-sm px-6 py-2.5 rounded transition-all duration-200 text-white bg-red-600 shadow-sm";
+        function renderCars() {
+            const cards = Array.from(document.querySelectorAll('.car-card'));
+            
+            // 1. Lọc ra các xe thuộc danh mục được chọn
+            const filteredCards = cards.filter(card => {
+                const segment = card.getAttribute('data-segment');
+                const isHybrid = card.getAttribute('data-hybrid') === 'true';
+
+                if (currentCategory === 'all') return true;
+                if (currentCategory === 'hybrid') return isHybrid;
+                return segment === currentCategory;
+            });
+
+            // 2. Ẩn tất cả xe
+            cards.forEach(card => card.style.display = 'none');
+
+            // 3. Tính toán số trang và index cắt mảng
+            const totalPages = Math.ceil(filteredCards.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+
+            // 4. Chỉ hiển thị xe thuộc trang hiện tại
+            filteredCards.slice(startIndex, endIndex).forEach(card => {
+                card.style.display = 'block';
+            });
+
+            // 5. Render nút phân trang
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            const wrapper = document.getElementById('pagination-wrapper');
+            wrapper.innerHTML = ''; // Xóa nút cũ
+
+            if (totalPages <= 1) return; // Nếu chỉ có 1 trang thì không cần hiện phân trang
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.innerText = i;
+                
+                // Style cho nút phân trang
+                if (i === currentPage) {
+                    btn.className = "w-10 h-10 flex items-center justify-center bg-red-600 text-white rounded-lg font-bold shadow-md transition-all";
+                } else {
+                    btn.className = "w-10 h-10 flex items-center justify-center bg-white border border-neutral-200 text-neutral-600 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all font-semibold";
+                }
+                
+                // Sự kiện click chuyển trang
+                btn.onclick = () => {
+                    currentPage = i;
+                    renderCars();
+                    // Cuộn mượt mà lên đầu phần danh sách xe
+                    document.getElementById('dong-xe').scrollIntoView({ behavior: 'smooth' });
+                };
+                
+                wrapper.appendChild(btn);
+            }
+        }
+
+        // Khởi chạy khi trang vừa tải xong
+        document.addEventListener('DOMContentLoaded', () => {
+            // Định dạng nút "Tất cả" sáng lên đầu tiên
+            document.getElementById('btn-all').className = "filter-btn font-semibold text-sm px-6 py-2.5 rounded transition-all duration-200 text-white bg-red-600 shadow-sm";
+            renderCars(); // Bắt đầu render và phân trang
+        });
     </script>
 </body>
 </html>

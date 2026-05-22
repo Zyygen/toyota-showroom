@@ -13,6 +13,10 @@
             <td>{{ $contactData['fullname'] }}</td>
         </tr>
         <tr>
+            <th style="background-color: #f4f4f4; text-align: left;">Email:</th>
+            <td>{{ $contactData['email'] }}</td>
+        </tr>
+        <tr>
             <th style="background-color: #f4f4f4; text-align: left;">Số điện thoại:</th>
             <td><strong style="color: #eb0a1e;">{{ $contactData['phone'] }}</strong></td>
         </tr>
