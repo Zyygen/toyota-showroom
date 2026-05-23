@@ -54,6 +54,12 @@
             </a>
         </div>
     </section>
+    @if(session('success'))
+                    <div class="bg-emerald-50 border border-emerald-300 text-emerald-800 px-4 py-3.5 rounded-lg mb-6 text-center font-semibold text-sm shadow-sm flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        {{ session('success') }}
+                    </div>
+    @endif
 
     @if(isset($viewedCars) && $viewedCars->count() > 0)
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8">
@@ -171,13 +177,6 @@
                 <h2 class="text-3xl font-black text-center uppercase tracking-tight text-neutral-900 mb-2">Đăng Ký Nhận Báo Giá & Lái Thử</h2>
                 <p class="text-center text-neutral-400 font-light mb-10">Để lại thông tin chính xác, đội ngũ cố vấn thương mại chuyên nghiệp sẽ hỗ trợ bạn lập tức.</p>
 
-                @if(session('success'))
-                    <div class="bg-emerald-50 border border-emerald-300 text-emerald-800 px-4 py-3.5 rounded-lg mb-6 text-center font-semibold text-sm shadow-sm flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        {{ session('success') }}
-                    </div>
-                @endif
-
                 <form action="{{ route('contact.submit') }}" method="POST" class="space-y-6">
                     @csrf
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -197,11 +196,18 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold uppercase text-neutral-500 tracking-wider mb-2">Dòng xe bạn đang quan tâm *</label>
+                        <label class="block text-xs font-bold uppercase text-neutral-500 tracking-wider mb-2">Dòng xe & Phiên bản đang quan tâm *</label>
                         <select name="car_model" required class="w-full border-neutral-200 rounded px-4 py-3 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-white transition-all outline-none">
-                            <option value="">-- Vui lòng chọn mẫu xe --</option>
+                            <option value="">-- Vui lòng chọn dòng xe & phiên bản --</option>
                             @foreach($carModels as $model)
-                                <option value="{{ $model->name }}">{{ $model->name }}</option>
+                                <optgroup label="Dòng xe {{ $model->name }}">
+                                    <option value="{{ $model->name }}">Chưa rõ bản nào - Cần tư vấn dòng {{ $model->name }}</option>
+                                    @foreach($model->cars as $car)
+                                        <option value="{{ $model->name }} {{ $car->variant_name }}">
+                                            ↳ {{ $model->name }} {{ $car->variant_name }} ({{ number_format($car->price, 0, ',', '.') }} ₫)
+                                        </option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                         </select>
                     </div>

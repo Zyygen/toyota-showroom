@@ -255,21 +255,31 @@
 
                 <form action="{{ route('contact.submit') }}" method="POST" class="space-y-5">
                     @csrf
-                    <input type="hidden" name="car_model" value="{{ $carModel->name }}">
-
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
                             <label class="block text-xs font-bold uppercase text-neutral-500 tracking-wider mb-2">Họ và tên quý khách *</label>
                             <input type="text" name="fullname" required class="w-full border-neutral-200 rounded px-4 py-3 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all outline-none">
                         </div>
-                        <div class="col-span-1 sm:col-span-2">
-                            <label class="block text-xs font-bold uppercase text-neutral-500 tracking-wider mb-2">Email nhận thông báo *</label>
-                            <input type="email" name="email" required class="w-full border-neutral-200 rounded px-4 py-3 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500">
-                        </div>
                         <div>
                             <label class="block text-xs font-bold uppercase text-neutral-500 tracking-wider mb-2">Số điện thoại *</label>
                             <input type="text" name="phone" required class="w-full border-neutral-200 rounded px-4 py-3 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all outline-none">
                         </div>
+                        <div class="col-span-1 sm:col-span-2">
+                            <label class="block text-xs font-bold uppercase text-neutral-500 tracking-wider mb-2">Email nhận thông báo *</label>
+                            <input type="email" name="email" required class="w-full border-neutral-200 rounded px-4 py-3 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-neutral-500 tracking-wider mb-2">Phiên bản xe bạn quan tâm *</label>
+                        <select name="car_model" required class="w-full border-neutral-200 rounded px-4 py-3 text-sm shadow-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-white transition-all outline-none">
+                            <option value="{{ $carModel->name }}">-- Cần tư vấn tất cả phiên bản của {{ $carModel->name }} --</option>
+                            @foreach($carModel->cars as $car)
+                                <option value="{{ $carModel->name }} {{ $car->variant_name }}">
+                                    {{ $carModel->name }} {{ $car->variant_name }} - Giá từ: {{ number_format($car->price, 0, ',', '.') }} ₫
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div>

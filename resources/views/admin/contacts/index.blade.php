@@ -1,6 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Danh sách Khách hàng Liên hệ & Đặt cọc</h2>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight flex items-center justify-between">
+            <span>Danh sách Khách hàng Liên hệ & Đặt cọc</span>
+            <span class="text-xs font-normal text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full flex items-center gap-2 border border-emerald-200">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                Live Update
+            </span>
+        </h2>
     </x-slot>
 
     <div class="py-12">
@@ -13,8 +22,8 @@
                     </div>
                 @endif
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500">
+                <div class="overflow-x-auto relative">
+                    <table class="w-full text-sm text-left text-gray-500 transition-all duration-300">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-100">
                             <tr>
                                 <th class="px-6 py-3">Ngày gửi</th>
@@ -25,9 +34,9 @@
                                 <th class="px-6 py-3 text-right">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="contacts-table-body">
                             @forelse ($contacts as $contact)
-                                <tr class="border-b hover:bg-gray-50">
+                                <tr class="border-b hover:bg-gray-50 transition-colors">
                                     <td class="px-6 py-4">{{ $contact->created_at->format('d/m/Y H:i') }}</td>
                                     
                                     <td class="px-6 py-4 font-bold text-gray-900">{{ $contact->fullname }}</td>
@@ -46,13 +55,13 @@
                                     
                                     <td class="px-6 py-4 text-center">
                                         @if($contact->consultation_status == 'pending')
-                                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-bold">Chờ gọi điện</span>
+                                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-bold">📞 Chờ gọi</span>
                                         @elseif($contact->consultation_status == 'completed' && $contact->payment_status == 'unpaid')
-                                            <span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">Đang chờ khách cọc</span>
+                                            <span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">⏳ Chờ cọc</span>
                                         @elseif($contact->payment_status == 'pending_verification')
-                                            <span class="bg-blue-100 text-blue-800 border border-blue-200 px-2 py-1 rounded text-xs font-bold animate-pulse">Đã CK (Chờ Check Bank)</span>
+                                            <span class="bg-blue-100 text-blue-800 border border-blue-200 px-2 py-1 rounded text-xs font-bold animate-pulse shadow-sm shadow-blue-200/50 block">🏦 Chờ Check Bank</span>
                                         @elseif($contact->payment_status == 'paid')
-                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">Đã xác nhận cọc</span>
+                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">✅ Đã cọc</span>
                                         @endif
                                     </td>
                                     
@@ -99,4 +108,32 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tbodyId = 'contacts-table-body';
+            
+            function fetchLatestContacts() {
+                // Gọi request ngầm tới URL hiện tại
+                fetch(window.location.href, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTbody = doc.getElementById(tbodyId);
+                    const oldTbody = document.getElementById(tbodyId);
+                    
+                    // Nạp dữ liệu mới vào bảng (Nếu đang hover hoặc tương tác thì có thể tạm dừng, nhưng ở đây auto thay thế luôn)
+                    if (newTbody && oldTbody) {
+                        oldTbody.innerHTML = newTbody.innerHTML;
+                    }
+                })
+                .catch(error => console.error('Lỗi lấy dữ liệu:', error));
+            }
+
+            setInterval(fetchLatestContacts, 2000);
+        });
+    </script>
 </x-app-layout>

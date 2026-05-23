@@ -42,13 +42,10 @@ class ContactController extends Controller
 
         // Gửi email thông báo cho Admin có khách hàng mới
         try {
-            Mail::to('email_cua_ban@gmail.com')->send(new CustomerContactMail($validatedData));
+            Mail::to('datbkp2k4@gmail.com')->send(new CustomerContactMail($validatedData));
         } catch (\Exception $e) {
             // Bỏ qua lỗi gửi mail để không làm gián đoạn trải nghiệm khách hàng
         }
-
-        // ĐÃ XÓA LUỒNG VNPAY Ở ĐÂY.
-        // Chỉ thông báo thành công và yêu cầu khách chờ tư vấn.
         return back()->with('success', 'Yêu cầu tư vấn của bạn đã được gửi. Chuyên viên sẽ sớm liên hệ và gửi thông tin đặt cọc qua Email cho bạn!');
     }
 
@@ -78,7 +75,7 @@ class ContactController extends Controller
             return redirect()->route('home')->with('success', 'Đơn đặt cọc này đã được xử lý!');
         }
 
-        $carModels = CarModel::all(); // Load danh sách xe để khách có thể đổi ý tại form
+        $carModels = CarModel::with('cars')->get();
         return view('deposit_form', compact('contact', 'carModels'));
     }
 
@@ -86,22 +83,24 @@ class ContactController extends Controller
     public function submitDeposit(Request $request, $token)
     {
         $contact = Contact::where('deposit_token', $token)->firstOrFail();
+        $carId = $request->input('final_car_id');
+    
+        $selectedCar = \App\Models\Car::find($carId);
+
+        if ($selectedCar) {
+            $carModelInfo = \App\Models\CarModel::find($selectedCar->car_model_id);
+            $modelName = $carModelInfo ? $carModelInfo->name : '';
+            $contact->final_car_model = trim($modelName . ' ' . $selectedCar->variant_name);
+            
+            $contact->deposit_amount = $selectedCar->price * 0.05;
+        } else {
+            // Đề phòng trường hợp lỗi mạng, giữ nguyên tên xe khách định cọc ban đầu
+            $contact->final_car_model = $contact->car_model;
+        }
         
-        // Cập nhật lại xe khách chọn (trong trường hợp sau khi tư vấn khách muốn đổi dòng xe khác)
-        $selectedCar = $request->input('final_car_model', $contact->car_model);
-        
-        // Tính lại giá cọc 5% cho dòng xe mới chốt
-        $carModelInfo = CarModel::with('cars')->where('name', $selectedCar)->first();
-        $minPrice = ($carModelInfo && $carModelInfo->cars->count() > 0) ? $carModelInfo->cars->min('price') : 0;
-        
-        $contact->final_car_model = $selectedCar;
-        $contact->deposit_amount = $minPrice * 0.05;
-        $contact->payment_status = 'pending_verification'; // Chuyển sang chờ Admin duyệt
+        $contact->payment_status = 'pending_verification'; 
         $contact->save();
 
-        // TODO: Gửi Email lịch hẹn đến Showroom
-        Mail::to($contact->email)->send(new AppointmentMail($contact));
-
-        return redirect()->route('home')->with('success', 'Xác nhận chuyển khoản thành công! Chúng tôi đã gửi Lịch hẹn đến Showroom qua Email của bạn.');
+        return redirect()->route('home')->with('success', 'Xác nhận chuyển khoản thành công! Chúng tôi sẽ kiểm tra giao dịch và gửi Lịch hẹn qua Email cho bạn sớm nhất.');
     }
 }

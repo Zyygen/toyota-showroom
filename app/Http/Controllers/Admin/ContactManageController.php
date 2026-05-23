@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AppointmentMail;
 
 class ContactManageController extends Controller
 {
@@ -43,6 +45,13 @@ class ContactManageController extends Controller
         $contact->payment_status = 'paid'; // Chuyển trạng thái sang Đã thanh toán
         $contact->save();
 
-        return back()->with('success', 'Đã xác nhận nhận tiền cọc thành công! Khách hàng '.$contact->fullname.' đã chính thức chốt xe.');
+        // KÍCH HOẠT GỬI MAIL CHỨA FILE PDF CHO KHÁCH HÀNG
+        try {
+            Mail::to($contact->email)->send(new AppointmentMail($contact));
+        } catch (\Exception $e) {
+            return back()->with('success', 'Đã xác nhận thanh toán, nhưng có lỗi khi gửi Email: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Đã xác nhận nhận tiền cọc thành công của khách hàng: '.$contact->fullname.'');
     }
 }
